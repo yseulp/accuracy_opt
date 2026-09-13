@@ -1,0 +1,92 @@
+{
+  "generated_at_utc": "2026-09-12T16:55:42.576611+00:00",
+  "config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20_scipy.yaml",
+  "config_sha256": "84e25d056fb098c2664d5a18da4aef040254532476c2dc1568b66067fa4a2da7",
+  "resolved_config": {
+    "benchmark": {
+      "name": "benchmark_testcube_20_scipy",
+      "domain_dim": [
+        20,
+        20,
+        20
+      ],
+      "random_seed": null,
+      "target_energy": {
+        "type": "attenuated_layers",
+        "scale": 0.5
+      }
+    },
+    "geometry": {
+      "type": "testcube",
+      "offset": [
+        5,
+        5,
+        5
+      ]
+    },
+    "process": {
+      "layer_height": 0.05,
+      "exposure_time": 2.0,
+      "atten_coef": 11.82,
+      "sigma": 2.0,
+      "I_max": 1.93,
+      "E_crit": 0.97,
+      "min_infl_factor": 0.001
+    },
+    "objectives": {
+      "guven": {
+        "penalty_weight": 100
+      },
+      "wang": {
+        "penalty_weight": 50
+      },
+      "reverse_guven": {
+        "penalty_weight": 100
+      }
+    },
+    "initialization": {
+      "type": "target_scaled",
+      "scale": 1.0
+    },
+    "optimization": {
+      "optimizer": "scipy",
+      "methods": [
+        "guven_linprog"
+      ]
+    },
+    "metrics": {
+      "quality": [
+        "undercured_voxels",
+        "overcured_voxels",
+        "outside_energy",
+        "min_inside_energy"
+      ],
+      "optimization_behavior": [
+        "runtime_seconds",
+        "iterations_completed",
+        "gradient_norm"
+      ],
+      "method_specific": [
+        "final_objective"
+      ],
+      "notes": {
+        "final_objective": "For scipy methods the objective is the Guven objective (outside energy plus undercure penalty) evaluated on the returned solution."
+      }
+    },
+    "output": {
+      "directory": "results/benchmark_testcube_20_scipy",
+      "comparison_csv": "objective_comparison.csv",
+      "save_intensity_arrays": true,
+      "save_config_snapshot": true,
+      "save_run_metadata": true,
+      "save_plots": true,
+      "plots_subdir": "plots"
+    }
+  },
+  "artifacts": {
+    "comparison_csv": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/results/benchmark_testcube_20_scipy/objective_comparison.csv",
+    "intensity_arrays": {
+      "guven_linprog": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/results/benchmark_testcube_20_scipy/I_opt_guven_linprog.npy"
+    }
+  }
+}

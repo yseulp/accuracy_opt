@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-09-12T20:13:55.431634+00:00",
+  "benchmark": "testcube_20",
+  "problem": "guven",
+  "solver": "linprog_highs",
+  "formulation": "linear_program",
+  "problem_parameters": {
+    "constraint_margin": 0.0
+  },
+  "solver_parameters": {},
+  "config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "config_sha256": "acd43eca6021ecda26ea0d53437593717accc995ce429c9def17aa2439719484",
+  "optimization_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+  "initial_objective": null,
+  "objective_value": 671.1793611545772,
+  "undercured_voxels": 41,
+  "overcured_voxels": 0,
+  "outside_energy": 671.179361154577,
+  "min_inside_energy": 0.9699999999999995,
+  "max_outside_energy": 0.8820877627893401,
+  "runtime_seconds": 0.7075313699897379,
+  "optimization_success": true,
+  "converged": true,
+  "iterations": 295,
+  "gradient_norm": null
+}

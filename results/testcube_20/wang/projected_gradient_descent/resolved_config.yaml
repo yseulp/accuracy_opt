@@ -1,0 +1,60 @@
+benchmark:
+  name: testcube_20
+  random_seed: 0
+geometry:
+  type: testcube
+  domain_dim:
+  - 20
+  - 20
+  - 20
+  offset:
+  - 5
+  - 5
+  - 5
+process:
+  layer_height: 0.05
+  exposure_time: 2.0
+  atten_coef: 11.82
+  sigma: 2.0
+  I_max: 1.93
+  E_crit: 0.97
+  min_infl_factor: 0.001
+initialization:
+  type: target_scaled
+  scale: 1.0
+target_energy:
+  type: attenuated_layers
+  reference: initial_intensity
+  scale: 0.5
+metrics:
+- undercured_voxels
+- overcured_voxels
+- outside_energy
+- min_inside_energy
+- max_outside_energy
+- runtime_seconds
+- optimization_success
+- converged
+- iterations
+- gradient_norm
+visualization:
+  slice_y: 10
+output:
+  directory: results
+  comparison_csv: comparison.csv
+  save_intensity_arrays: true
+  save_plots: true
+optimization_defaults_source: /home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/optimization_defaults.yaml
+selection:
+  problem: wang
+  solver: projected_gradient_descent
+  problem_parameters: {}
+  penalty_parameters:
+    penalty_weight: 50.0
+  solver_parameters:
+    step_size: 0.03
+    max_iterations: 100
+    objective_tolerance: null
+  adapter: penalty
+  formulation: exterior_penalty
+  constraint_handling: penalty

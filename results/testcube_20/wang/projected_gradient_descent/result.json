@@ -1,0 +1,36 @@
+{
+  "generated_at_utc": "2026-09-13T17:40:18.783853+00:00",
+  "benchmark": "testcube_20",
+  "problem": "wang",
+  "solver": "projected_gradient_descent",
+  "formulation": "exterior_penalty",
+  "adapter": "penalty",
+  "constraint_handling": "penalty",
+  "problem_parameters": {},
+  "penalty_parameters": {
+    "penalty_weight": 50.0
+  },
+  "solver_parameters": {
+    "step_size": 0.03,
+    "max_iterations": 100,
+    "objective_tolerance": null
+  },
+  "config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "optimization_config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/optimization_defaults.yaml",
+  "config_sha256": "0b38aa098f5b757cdd62af9f89ad58b2d22cf9db3a7acc38a53c9b285508563e",
+  "optimization_message": "maximum iterations completed",
+  "initial_objective": 54497.79485791308,
+  "objective_value": 137368.28373704883,
+  "formulation_objective_value": 137368.28373704883,
+  "base_objective_value": 7200.985875166894,
+  "undercured_voxels": 0,
+  "overcured_voxels": 1948,
+  "outside_energy": 5672.318683568544,
+  "min_inside_energy": 2.847953372212814,
+  "max_outside_energy": 4.910031492505485,
+  "runtime_seconds": 7.49212219598121,
+  "optimization_success": true,
+  "converged": null,
+  "iterations": 100,
+  "gradient_norm": 6030.966292432215
+}

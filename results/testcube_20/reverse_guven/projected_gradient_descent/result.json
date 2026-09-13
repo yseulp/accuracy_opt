@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-09-13T15:00:24.598631+00:00",
+  "benchmark": "testcube_20",
+  "problem": "reverse_guven",
+  "solver": "projected_gradient_descent",
+  "formulation": "penalty_objective",
+  "problem_parameters": {
+    "penalty_weight": 100.0
+  },
+  "solver_parameters": {
+    "step_size": 0.03,
+    "max_iterations": 100,
+    "objective_tolerance": null
+  },
+  "config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "optimization_config_source_path": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/optimization_defaults.yaml",
+  "config_sha256": "9db49fcf7af44f0317b3504163da25a27d3fdc3aef04d8605c82e9f5f06cc723",
+  "optimization_message": "maximum iterations completed",
+  "initial_objective": 152530.37823875883,
+  "objective_value": -2912.2236482767853,
+  "undercured_voxels": 0,
+  "overcured_voxels": 228,
+  "outside_energy": 1226.6586625513132,
+  "min_inside_energy": 1.0366260639498754,
+  "max_outside_energy": 1.0597185832866867,
+  "runtime_seconds": 4.5725947879836895,
+  "optimization_success": true,
+  "converged": null,
+  "iterations": 100,
+  "gradient_norm": 103.46966863821218
+}

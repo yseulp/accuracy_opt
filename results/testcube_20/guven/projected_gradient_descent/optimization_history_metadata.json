@@ -1,0 +1,26 @@
+{
+  "benchmark": "testcube_20",
+  "benchmark_config": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "optimization_config": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/optimization_defaults.yaml",
+  "problem": "guven",
+  "solver": "projected_gradient_descent",
+  "adapter": "penalty",
+  "formulation": "exterior_penalty",
+  "constraint_handling": "penalty",
+  "problem_parameters": {},
+  "penalty_parameters": {
+    "penalty_weight": 100.0
+  },
+  "solver_parameters": {
+    "step_size": 0.03,
+    "max_iterations": 100,
+    "objective_tolerance": null
+  },
+  "history_available": true,
+  "iteration_semantics": "one projected gradient update",
+  "reported_iterations": 100,
+  "success": true,
+  "converged": null,
+  "message": "maximum iterations completed",
+  "runtime_seconds": 12.453997814009199
+}

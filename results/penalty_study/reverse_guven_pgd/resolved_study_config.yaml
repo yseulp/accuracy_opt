@@ -1,0 +1,71 @@
+benchmark_config: /home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml
+problem: reverse_guven
+solver: projected_gradient_descent
+problem_parameters: {}
+solver_parameters:
+  step_size: 0.03
+  max_iterations: 100
+  objective_tolerance: null
+penalty_weights:
+- 1.0
+- 10.0
+- 100.0
+- 1000.0
+- 10000.0
+- 100000.0
+- 1000000.0
+convergence_plot_weights:
+- 1.0
+- 100.0
+- 10000.0
+- 1000000.0
+output_directory: results/penalty_study/reverse_guven_pgd
+study_config_source: /home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/studies/penalty_study_reverse_guven.yaml
+benchmark_config_sha256: 8823c109a655b19c1e3a52f2f35fec83cc4d468d9cedaae4c50e35fc80be2a8f
+resolved_benchmark_config:
+  benchmark:
+    name: testcube_20
+    random_seed: 0
+  geometry:
+    type: testcube
+    domain_dim:
+    - 20
+    - 20
+    - 20
+    offset:
+    - 5
+    - 5
+    - 5
+  process:
+    layer_height: 0.05
+    exposure_time: 2.0
+    atten_coef: 11.82
+    sigma: 2.0
+    I_max: 1.93
+    E_crit: 0.97
+    min_infl_factor: 0.001
+  initialization:
+    type: target_scaled
+    scale: 1.0
+  target_energy:
+    type: attenuated_layers
+    reference: initial_intensity
+    scale: 0.5
+  metrics:
+  - undercured_voxels
+  - overcured_voxels
+  - outside_energy
+  - min_inside_energy
+  - max_outside_energy
+  - runtime_seconds
+  - optimization_success
+  - converged
+  - iterations
+  - gradient_norm
+  visualization:
+    slice_y: 10
+  output:
+    directory: results
+    comparison_csv: comparison.csv
+    save_intensity_arrays: true
+    save_plots: true

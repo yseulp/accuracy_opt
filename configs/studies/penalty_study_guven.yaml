@@ -1,0 +1,27 @@
+benchmark_config: configs/benchmark_testcube_20.yaml
+
+problem: guven
+solver: projected_gradient_descent
+problem_parameters: {}
+
+solver_parameters:
+  step_size: 0.03
+  max_iterations: 100
+  objective_tolerance: null
+
+penalty_weights:
+  - 1
+  - 10
+  - 100
+  - 1000
+  - 10000
+  - 100000
+  - 1000000
+
+convergence_plot_weights:
+  - 1
+  - 100
+  - 10000
+  - 1000000
+
+output_directory: results/penalty_study/guven_pgd
