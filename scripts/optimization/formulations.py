@@ -11,6 +11,7 @@ import numpy as np
 from scipy import sparse
 
 from scripts.model.simulation import simulate
+from scripts.optimization.objectives import guven_boundary_mask
 
 
 @dataclass(frozen=True)
@@ -311,13 +312,24 @@ def _identity_initial_point(initial_intensity):
     return np.asarray(initial_intensity, dtype=np.float64)
 
 
-def _build_guven_linear(problem, A, C, T, param, problem_parameters):
+def _build_guven_linear(
+    problem,
+    A,
+    C,
+    T,
+    param,
+    problem_parameters,
+    *,
+    domain_dim,
+):
     del T, problem_parameters
     C_np = np.asarray(C)
     inside = np.flatnonzero(C_np == 1)
-    outside = np.flatnonzero(C_np == 0)
+    boundary = np.flatnonzero(
+        np.asarray(guven_boundary_mask(C, domain_dim), dtype=bool)
+    )
     A_inside = A[inside]
-    c = np.asarray(A[outside].sum(axis=0)).ravel()
+    c = np.asarray(A[boundary].sum(axis=0)).ravel()
     return LinearFormulation(
         c=c,
         A_ub=-A_inside,
@@ -330,8 +342,17 @@ def _build_guven_linear(problem, A, C, T, param, problem_parameters):
     )
 
 
-def _build_wang_linear(problem, A, C, T, param, problem_parameters):
-    del problem_parameters
+def _build_wang_linear(
+    problem,
+    A,
+    C,
+    T,
+    param,
+    problem_parameters,
+    *,
+    domain_dim,
+):
+    del domain_dim, problem_parameters
     C_np = np.asarray(C)
     T_np = np.asarray(T, dtype=np.float64)
     inside = np.flatnonzero(C_np == 1)
@@ -377,8 +398,17 @@ def _build_wang_linear(problem, A, C, T, param, problem_parameters):
     )
 
 
-def _build_reverse_guven_linear(problem, A, C, T, param, problem_parameters):
-    del T, problem_parameters
+def _build_reverse_guven_linear(
+    problem,
+    A,
+    C,
+    T,
+    param,
+    problem_parameters,
+    *,
+    domain_dim,
+):
+    del T, domain_dim, problem_parameters
     C_np = np.asarray(C)
     inside = np.flatnonzero(C_np == 1)
     outside = np.flatnonzero(C_np == 0)
@@ -396,8 +426,17 @@ def _build_reverse_guven_linear(problem, A, C, T, param, problem_parameters):
     )
 
 
-def _build_cure_linear(problem, A, C, T, param, problem_parameters):
-    del T, problem_parameters
+def _build_cure_linear(
+    problem,
+    A,
+    C,
+    T,
+    param,
+    problem_parameters,
+    *,
+    domain_dim,
+):
+    del T, domain_dim, problem_parameters
     C_np = np.asarray(C)
     inside = np.flatnonzero(C_np == 1)
     outside = np.flatnonzero(C_np == 0)
@@ -473,7 +512,13 @@ def _build_linear(
     del penalty_parameters
     A = build_energy_matrix(kernel, domain_dim, param)
     return LINEAR_BUILDERS[problem.name](
-        problem, A, C, T, param, problem_parameters
+        problem,
+        A,
+        C,
+        T,
+        param,
+        problem_parameters,
+        domain_dim=domain_dim,
     )
 
 

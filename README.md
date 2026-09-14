@@ -224,10 +224,13 @@ Guven formulation.
 | `wang` | supported | unsupported | supported | supported |
 | `reverse_guven` | supported | supported | supported | supported |
 
-Guven always means outside-energy minimization with a hard inside cure
-constraint. PGD cannot enforce that constraint directly, so its formulation
-adapter creates the configured quadratic exterior penalty. SLSQP, trust-constr,
-and HiGHS receive the constraint directly and never receive `penalty_weight`.
+Guven always means energy minimization on the one-voxel-wide exterior boundary
+of the target geometry, using an 8-neighbor XY boundary with no Z expansion,
+with a hard inside cure constraint. This differs from the benchmark's separate
+all-outside energy metrics. PGD cannot enforce that constraint directly, so its
+formulation adapter creates the configured quadratic exterior penalty. SLSQP,
+trust-constr, and HiGHS receive the constraint directly and never receive
+`penalty_weight`.
 
 Wang always means L1 target matching with hard inside and outside cure
 constraints. PGD receives the configured linear exterior penalty. The exact LP

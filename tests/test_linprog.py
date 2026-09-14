@@ -6,6 +6,7 @@ import numpy as np
 
 from scripts.optimization.objectives import (
     obj_fun_2,
+    obj_fun_guven,
     obj_fun_reverse_guven,
     obj_fun_wang,
 )
@@ -58,11 +59,17 @@ class LinprogTest(unittest.TestCase):
         result = self.run_guven("linprog_highs", {})
         self.assertEqual(result.formulation, "linear_program")
         self.assert_cure_constraint(result)
-        energy = np.asarray(
-            simulate(result.I_opt, self.kernel, self.domain_dim, self.param),
-            dtype=np.float64,
+        expected_objective = float(
+            obj_fun_guven(
+                result.I_opt,
+                jnp.zeros_like(self.I_start),
+                jnp.asarray(self.C),
+                self.kernel,
+                self.domain_dim,
+                self.param,
+            )
         )
-        self.assertAlmostEqual(float(np.sum(energy[self.C == 0])), 0.0)
+        self.assertAlmostEqual(result.final_objective, expected_objective, places=8)
 
     def test_direct_solver_rejects_penalty_parameters(self):
         with self.assertRaisesRegex(ValueError, "does not accept penalty"):

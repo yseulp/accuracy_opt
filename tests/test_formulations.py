@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import jax.numpy as jnp
 
 from scripts.optimization.formulations import FORMULATION_ADAPTERS
+from scripts.optimization.objectives import guven_boundary_mask
 from scripts.optimization.problems import PROBLEMS
 
 
@@ -40,12 +41,29 @@ class PenaltyAdapterTest(unittest.TestCase):
         return float(formulation.objective(self.I))
 
     def test_guven_penalty_is_added_to_base_objective(self):
-        outside_energy = 0.7 + 0.1
+        domain_dim = [5, 5, 1]
+        C = jnp.zeros(25).at[12].set(1.0)
+        I = jnp.linspace(0.0, 0.96, 25).at[12].set(0.2)
+        problem = PROBLEMS["guven"]
+        formulation = FORMULATION_ADAPTERS["penalty"].build(
+            problem,
+            I_start=I,
+            T=jnp.zeros_like(I),
+            C=C,
+            kernel=self.kernel,
+            domain_dim=domain_dim,
+            param=self.param,
+            problem_parameters=problem.resolve_parameters({}),
+            penalty_parameters={"penalty_weight": 10.0},
+        )
+        boundary_energy = float(
+            jnp.sum(I * guven_boundary_mask(C, domain_dim).astype(I.dtype))
+        )
         squared_undercure = (0.5 - 0.2) ** 2
 
         self.assertAlmostEqual(
-            self.penalty_value("guven", 10.0),
-            outside_energy + 10.0 * squared_undercure,
+            float(formulation.objective(I)),
+            boundary_energy + 10.0 * squared_undercure,
         )
 
     def test_wang_penalty_matches_exterior_penalty_definition(self):
