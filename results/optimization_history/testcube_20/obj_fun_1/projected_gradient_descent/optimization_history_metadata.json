@@ -1,0 +1,25 @@
+{
+  "benchmark": "testcube_20",
+  "benchmark_config": "/home/yseulp/work/cps_tmp/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "optimization_config": "/home/yseulp/work/cps_tmp/accuracy_opt/configs/optimization_defaults.yaml",
+  "problem": "obj_fun_1",
+  "solver": "projected_gradient_descent",
+  "output_directory": "/home/yseulp/work/cps_tmp/accuracy_opt/results/optimization_history/testcube_20/obj_fun_1/projected_gradient_descent",
+  "adapter": "objective",
+  "formulation": "base_objective",
+  "constraint_handling": "none",
+  "problem_parameters": {},
+  "penalty_parameters": {},
+  "solver_parameters": {
+    "step_size": 0.03,
+    "max_iterations": 100,
+    "objective_tolerance": null
+  },
+  "history_available": true,
+  "iteration_semantics": "one projected gradient update",
+  "reported_iterations": 100,
+  "success": true,
+  "converged": null,
+  "message": "maximum iterations completed",
+  "runtime_seconds": 6.071198044999619
+}

@@ -64,15 +64,8 @@ class SweepResult:
     penalty_weight: float
     final_original_objective: float
     final_constraint_violation: float
-    final_weighted_penalty: float
-    final_penalized_objective: float
-    final_gradient_norm: float
     undercured_voxels: int
     overcured_voxels: int
-    iterations_completed: int
-    runtime_seconds: float
-    logged_runtime_seconds: float
-    success: bool
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -330,15 +323,8 @@ def run_pgd_with_history(
         penalty_weight=penalty_weight,
         final_original_objective=final.original_objective,
         final_constraint_violation=final.raw_penalty,
-        final_weighted_penalty=final.weighted_penalty,
-        final_penalized_objective=final.penalized_objective,
-        final_gradient_norm=final.gradient_norm,
         undercured_voxels=final.undercured_voxels,
         overcured_voxels=final.overcured_voxels,
-        iterations_completed=final.iteration,
-        runtime_seconds=optimization_runtime_seconds,
-        logged_runtime_seconds=logged_runtime_seconds,
-        success=success and final.iteration == max_iterations,
     )
 
 
@@ -422,46 +408,107 @@ def create_summary_plots(
     summaries: list[SweepResult],
     output_directory: Path,
 ) -> None:
-    weights = np.asarray([result.penalty_weight for result in summaries])
+    """Create two compact penalty-study plots.
 
-    _single_summary_plot(
-        weights,
-        np.asarray([result.final_original_objective for result in summaries]),
-        ylabel="Final original objective",
-        title="Original objective vs. penalty weight",
-        output_path=output_directory / "objective_vs_penalty.png",
+    1. Original objective and constraint violation on two y-axes.
+    2. Undercured and overcured voxel counts on one shared y-axis.
+    """
+    weights = np.asarray(
+        [result.penalty_weight for result in summaries],
+        dtype=np.float64,
     )
-    _single_summary_plot(
-        weights,
-        np.asarray([result.final_constraint_violation for result in summaries]),
-        ylabel="Final raw penalty P(I)",
-        title="Raw penalty vs. penalty weight",
-        output_path=output_directory / "constraint_vs_penalty.png",
+    original_objectives = np.asarray(
+        [result.final_original_objective for result in summaries],
+        dtype=np.float64,
+    )
+    constraint_violations = np.asarray(
+        [result.final_constraint_violation for result in summaries],
+        dtype=np.float64,
+    )
+    undercured_voxels = np.asarray(
+        [result.undercured_voxels for result in summaries],
+        dtype=np.int64,
+    )
+    overcured_voxels = np.asarray(
+        [result.overcured_voxels for result in summaries],
+        dtype=np.int64,
     )
 
-    figure, axis = plt.subplots(figsize=(7, 4.5))
+    # Plot 1: mathematical trade-off, similar to the Rutsch penalty-study layout.
+    figure, objective_axis = plt.subplots(figsize=(8.0, 5.0))
+    constraint_axis = objective_axis.twinx()
+
+    objective_line = objective_axis.plot(
+        weights,
+        original_objectives,
+        marker="o",
+        linewidth=2.0,
+        label="Original objective",
+    )[0]
+    constraint_line = constraint_axis.plot(
+        weights,
+        constraint_violations,
+        marker="s",
+        linestyle="--",
+        linewidth=2.0,
+        label="Constraint violation",
+    )[0]
+
+    objective_axis.set_xscale("log")
+    objective_axis.set_xlabel("Penalty weight")
+    objective_axis.set_ylabel("Final original objective")
+    constraint_axis.set_ylabel("Final constraint violation P(I)")
+    objective_axis.set_title(
+        "Original objective and constraint violation vs. penalty weight"
+    )
+    objective_axis.grid(True, which="both", alpha=0.25)
+
+    objective_axis.legend(
+        [objective_line, constraint_line],
+        [objective_line.get_label(), constraint_line.get_label()],
+        loc="best",
+    )
+
+    figure.tight_layout()
+    figure.savefig(
+        output_directory / "objective_constraint_vs_penalty.png",
+        dpi=300,
+    )
+    plt.close(figure)
+
+    # Plot 2: physical curing quality.
+    # Both quantities are voxel counts, so a shared y-axis is clearer than twin axes.
+    figure, axis = plt.subplots(figsize=(8.0, 5.0))
+
     axis.plot(
         weights,
-        [result.undercured_voxels for result in summaries],
+        undercured_voxels,
         marker="o",
+        linewidth=2.0,
         label="Undercured voxels",
     )
     axis.plot(
         weights,
-        [result.overcured_voxels for result in summaries],
+        overcured_voxels,
         marker="s",
+        linestyle="--",
+        linewidth=2.0,
         label="Overcured voxels",
     )
+
     axis.set_xscale("log")
     axis.set_xlabel("Penalty weight")
     axis.set_ylabel("Voxel count")
-    axis.set_title("Cure violations vs. penalty weight")
+    axis.set_title("Cure quality vs. penalty weight")
     axis.grid(True, which="both", alpha=0.25)
-    axis.legend()
-    figure.tight_layout()
-    figure.savefig(output_directory / "cure_violations_vs_penalty.png", dpi=160)
-    plt.close(figure)
+    axis.legend(loc="best")
 
+    figure.tight_layout()
+    figure.savefig(
+        output_directory / "cure_quality_vs_penalty.png",
+        dpi=300,
+    )
+    plt.close(figure)
 
 def create_convergence_plot(
     histories: dict[float, list[IterationRecord]],

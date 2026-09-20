@@ -704,8 +704,23 @@ def _append_final_if_needed(
 
 
 def create_history_plot(history, metadata, output_path):
+    """Create compact optimization-history plots.
+
+    Main figure:
+      x-axis: solver iteration
+      left y-axis: original objective and formulation/penalized objective
+      right y-axis: raw constraint violation
+
+    This makes it possible to distinguish:
+      - the physical/original problem objective, and
+      - the objective that the selected solver formulation actually minimizes.
+
+    A second figure shows undercured and overcured voxel counts.
+    """
+    output_path = Path(output_path)
+
     if not metadata["history_available"]:
-        figure, axis = plt.subplots(figsize=(9, 4.5))
+        figure, axis = plt.subplots(figsize=(8.0, 4.2))
         axis.axis("off")
         axis.text(
             0.5,
@@ -713,7 +728,7 @@ def create_history_plot(history, metadata, output_path):
             "Iteration history unavailable",
             ha="center",
             va="center",
-            fontsize=16,
+            fontsize=15,
             weight="bold",
         )
         axis.text(
@@ -726,105 +741,154 @@ def create_history_plot(history, metadata, output_path):
         )
         figure.suptitle(f"{metadata['problem']} + {metadata['solver']}")
         figure.tight_layout()
-        figure.savefig(output_path, dpi=160)
+        figure.savefig(output_path, dpi=300)
         plt.close(figure)
         return
 
-    iterations = [record.iteration for record in history]
-    figure, axes = plt.subplots(3, 1, figsize=(9, 11), sharex=True)
-    axes[0].plot(
-        iterations,
+    iterations = np.asarray(
+        [record.iteration for record in history],
+        dtype=np.float64,
+    )
+    original_objective = np.asarray(
         [record.original_objective for record in history],
+        dtype=np.float64,
+    )
+    formulation_objective = np.asarray(
+        [record.formulation_objective for record in history],
+        dtype=np.float64,
+    )
+    constraint_violation = np.asarray(
+        [
+            np.nan
+            if record.raw_constraint_violation is None
+            else record.raw_constraint_violation
+            for record in history
+        ],
+        dtype=np.float64,
+    )
+
+    # Main plot:
+    # - original objective J
+    # - formulation objective (for penalty PGD: J + lambda * P)
+    # - raw constraint violation
+    figure, objective_axis = plt.subplots(figsize=(8.2, 4.8))
+    constraint_axis = objective_axis.twinx()
+
+    original_line = objective_axis.plot(
+        iterations,
+        original_objective,
+        linewidth=2.0,
+        linestyle="-",
         label="Original objective",
-        color="tab:blue",
-    )
-    original_values = np.asarray(
-        [record.original_objective for record in history], dtype=np.float64
-    )
-    formulation_values = np.asarray(
-        [record.formulation_objective for record in history], dtype=np.float64
-    )
-    if not np.allclose(original_values, formulation_values, rtol=1e-9, atol=1e-10):
-        formulation_label = (
-            "Penalized objective"
-            if metadata["constraint_handling"] == "penalty"
-            else "Solver formulation objective"
-        )
-        axes[0].plot(
+    )[0]
+
+    formulation_line = objective_axis.plot(
+        iterations,
+        formulation_objective,
+        linewidth=2.0,
+        linestyle="-.",
+        label="Penalized objective"
+        if metadata["constraint_handling"] == "penalty"
+        else "Solver objective",
+    )[0]
+
+    constraint_line = None
+    if np.any(np.isfinite(constraint_violation)):
+        constraint_line = constraint_axis.plot(
             iterations,
-            [record.formulation_objective for record in history],
-            label=formulation_label,
-            color="tab:orange",
+            constraint_violation,
+            linewidth=2.0,
             linestyle="--",
-        )
-    axes[0].set_ylabel("Objective")
-    axes[0].grid(True, alpha=0.25)
-    axes[0].legend()
+            label="Constraint violation",
+        )[0]
 
-    violation_values = [record.raw_constraint_violation for record in history]
-    margin_values = [record.min_constraint_margin for record in history]
-    if any(value is not None for value in violation_values):
-        violation_axis = axes[1]
-        margin_axis = violation_axis.twinx()
-        violation_axis.plot(
-            iterations,
-            violation_values,
-            color="tab:red",
-            label="Raw constraint violation",
-        )
-        margin_axis.plot(
-            iterations,
-            margin_values,
-            color="tab:green",
-            label="Minimum constraint margin",
-        )
-        violation_axis.set_ylabel("Constraint violation", color="tab:red")
-        margin_axis.set_ylabel("Minimum margin", color="tab:green")
-        violation_axis.set_yscale("symlog")
-        margin_axis.set_yscale("symlog")
-        violation_axis.grid(True, alpha=0.25)
-        lines = violation_axis.lines + margin_axis.lines
-        violation_axis.legend(lines, [line.get_label() for line in lines])
-    else:
-        axes[1].text(
-            0.5,
-            0.5,
-            "No explicit constraints for this problem",
-            transform=axes[1].transAxes,
-            ha="center",
-            va="center",
-        )
-        axes[1].set_axis_off()
+    objective_axis.set_xlabel("Iteration")
+    objective_axis.set_ylabel("Objective")
+    constraint_axis.set_ylabel("Constraint violation")
+    objective_axis.set_title(
+        f"Optimization history: {metadata['problem']} + {metadata['solver']}"
+    )
+    objective_axis.grid(True, alpha=0.25)
 
-    axes[2].plot(
-        iterations,
-        [record.undercured_voxels for record in history],
-        label="Undercured voxels",
-        color="tab:purple",
+    lines = [original_line, formulation_line]
+    if constraint_line is not None:
+        lines.append(constraint_line)
+
+    objective_axis.legend(
+        lines,
+        [line.get_label() for line in lines],
+        loc="best",
+        frameon=True,
     )
-    axes[2].plot(
-        iterations,
-        [record.overcured_voxels for record in history],
-        label="Overcured voxels",
-        color="tab:brown",
-    )
-    axes[2].set_xlabel("Solver iteration")
-    axes[2].set_ylabel("Voxel count")
-    axes[2].grid(True, alpha=0.25)
-    axes[2].legend()
-    figure.suptitle(
-        f"Optimization History: {metadata['problem']} + {metadata['solver']}"
-    )
+
     figure.tight_layout()
-    figure.savefig(output_path, dpi=160)
+    figure.savefig(output_path, dpi=300)
     plt.close(figure)
 
+    # Second plot: physical cure quality vs. iteration.
+    undercured = np.asarray(
+        [record.undercured_voxels for record in history],
+        dtype=np.int64,
+    )
+    overcured = np.asarray(
+        [record.overcured_voxels for record in history],
+        dtype=np.int64,
+    )
+
+    figure, axis = plt.subplots(figsize=(8.2, 4.8))
+    axis.plot(
+        iterations,
+        undercured,
+        linewidth=2.0,
+        linestyle="-",
+        label="Undercured voxels",
+    )
+    axis.plot(
+        iterations,
+        overcured,
+        linewidth=2.0,
+        linestyle="--",
+        label="Overcured voxels",
+    )
+    axis.set_xlabel("Iteration")
+    axis.set_ylabel("Voxel count")
+    axis.set_title(
+        f"Cure history: {metadata['problem']} + {metadata['solver']}"
+    )
+    axis.grid(True, alpha=0.25)
+    axis.legend(loc="best", frameon=True)
+
+    figure.tight_layout()
+    cure_output_path = output_path.with_name(
+        f"{output_path.stem}_cure{output_path.suffix}"
+    )
+    figure.savefig(cure_output_path, dpi=300)
+    plt.close(figure)
 
 def _write_history_csv(history, output_path):
+    """Write only the metrics needed for the optimization-history analysis."""
+    fieldnames = [
+        "iteration",
+        "original_objective",
+        "formulation_objective",
+        "raw_constraint_violation",
+        "undercured_voxels",
+        "overcured_voxels",
+    ]
     with output_path.open("w", newline="", encoding="utf-8") as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=list(asdict(history[0])))
+        writer = csv.DictWriter(output_file, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(asdict(record) for record in history)
+        for record in history:
+            writer.writerow(
+                {
+                    "iteration": record.iteration,
+                    "original_objective": record.original_objective,
+                    "formulation_objective": record.formulation_objective,
+                    "raw_constraint_violation": record.raw_constraint_violation,
+                    "undercured_voxels": record.undercured_voxels,
+                    "overcured_voxels": record.overcured_voxels,
+                }
+            )
 
 
 def _write_json(data, output_path):

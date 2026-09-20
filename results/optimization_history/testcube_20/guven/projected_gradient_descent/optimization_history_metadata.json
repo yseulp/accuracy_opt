@@ -1,10 +1,10 @@
 {
   "benchmark": "testcube_20",
-  "benchmark_config": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/benchmark_testcube_20.yaml",
-  "optimization_config": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/configs/optimization_defaults.yaml",
+  "benchmark_config": "/home/yseulp/work/cps_tmp/accuracy_opt/configs/benchmark_testcube_20.yaml",
+  "optimization_config": "/home/yseulp/work/cps_tmp/accuracy_opt/configs/optimization_defaults.yaml",
   "problem": "guven",
   "solver": "projected_gradient_descent",
-  "output_directory": "/home/yseulp/Arbeit/Hiwi/cps/accuracy_opt/results/optimization_history/testcube_20/guven/projected_gradient_descent",
+  "output_directory": "/home/yseulp/work/cps_tmp/accuracy_opt/results/optimization_history/testcube_20/guven/projected_gradient_descent",
   "adapter": "penalty",
   "formulation": "exterior_penalty",
   "constraint_handling": "penalty",
@@ -23,5 +23,5 @@
   "success": true,
   "converged": null,
   "message": "maximum iterations completed",
-  "runtime_seconds": 12.159211916005006
+  "runtime_seconds": 10.024979726003949
 }

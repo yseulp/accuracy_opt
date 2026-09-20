@@ -17,6 +17,9 @@ penalty_weights:
   - 10000
   - 100000
   - 1000000
+  - 10000000
+  - 100000000
+  
 
 convergence_plot_weights:
   - 1
