@@ -16,12 +16,17 @@ penalty_weights:
 - 1000000.0
 - 10000000.0
 - 100000000.0
+output_directory: results/penalty_study/reverse_guven_pgd
 convergence_plot_weights:
 - 1.0
+- 10.0
 - 100.0
+- 1000.0
 - 10000.0
+- 100000.0
 - 1000000.0
-output_directory: results/penalty_study/reverse_guven_pgd
+- 10000000.0
+- 100000000.0
 study_config_source: /home/yseulp/work/cps_tmp/accuracy_opt/configs/studies/penalty_study_reverse_guven.yaml
 benchmark_config_sha256: 8823c109a655b19c1e3a52f2f35fec83cc4d468d9cedaae4c50e35fc80be2a8f
 resolved_benchmark_config:

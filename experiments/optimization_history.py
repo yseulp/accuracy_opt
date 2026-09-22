@@ -703,7 +703,7 @@ def _append_final_if_needed(
         history.append(final_record)
 
 
-def create_history_plot(history, metadata, output_path):
+def create_history_plot_1(history, metadata, output_path):
     """Create compact optimization-history plots.
 
     Main figure:
@@ -864,6 +864,126 @@ def create_history_plot(history, metadata, output_path):
     )
     figure.savefig(cure_output_path, dpi=300)
     plt.close(figure)
+
+def create_history_plot(history, metadata, output_path):
+    """Create publication-style optimization-history plots."""
+    output_path = Path(output_path)
+
+    if not metadata["history_available"]:
+        figure, axis = plt.subplots(figsize=(8.0, 4.2))
+        axis.axis("off")
+        axis.text(0.5, 0.58, "Iteration history unavailable", ha="center", va="center", fontsize=15, weight="bold")
+        axis.text(0.5, 0.38, metadata["history_limitation"], ha="center", va="center", wrap=True)
+        figure.suptitle(f"{metadata['problem']} + {metadata['solver']}")
+        figure.tight_layout()
+        figure.savefig(output_path, dpi=300)
+        plt.close(figure)
+        return
+
+    iterations = np.asarray([record.iteration for record in history], dtype=np.float64)
+    original_objective = np.asarray([record.original_objective for record in history], dtype=np.float64)
+    formulation_objective = np.asarray([record.formulation_objective for record in history], dtype=np.float64)
+    constraint_violation = np.asarray(
+        [np.nan if record.raw_constraint_violation is None else record.raw_constraint_violation for record in history],
+        dtype=np.float64,
+    )
+
+    # 논문 스타일 폰트 및 설정
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.size": 10,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "axes.linewidth": 0.8,
+        "lines.linewidth": 1.8,
+        "mathtext.fontset": "dejavuserif",
+    })
+
+    blue = "#1f77b4"
+    red = "#d62728"
+
+    # 1. Main Plot: Objective & Constraint Violation vs Iteration
+    figure, objective_axis = plt.subplots(figsize=(6.0, 4.2))
+    constraint_axis = objective_axis.twinx()
+
+    l1 = objective_axis.plot(
+        iterations, original_objective, color=blue, linestyle="-", label=r"Original Obj $J$"
+    )[0]
+
+    l2 = objective_axis.plot(
+        iterations, formulation_objective, color="black", linestyle="-.", label=r"Penalized Obj $\tilde{J}$"
+        if metadata["constraint_handling"] == "penalty" else "Solver Obj"
+    )[0]
+
+    lines = [l1, l2]
+
+    if np.any(np.isfinite(constraint_violation)):
+        constraint_axis.set_yscale("symlog", linthresh=1e-4)
+        l3 = constraint_axis.plot(
+            iterations, constraint_violation, color=red, linestyle="--", label=r"Violation $P$"
+        )[0]
+        lines.append(l3)
+
+    objective_axis.set_xlabel("Iteration")
+    objective_axis.set_ylabel("Objective Value", color=blue)
+    constraint_axis.set_ylabel("Constraint Violation", color=red)
+
+    objective_axis.tick_params(axis="y", colors=blue, direction="in")
+    constraint_axis.tick_params(axis="y", colors=red, direction="in")
+    objective_axis.tick_params(axis="x", direction="in")
+
+    objective_axis.spines["left"].set_color(blue)
+    constraint_axis.spines["right"].set_color(red)
+
+    objective_axis.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
+    objective_axis.legend(lines, [l.get_label() for l in lines], loc="best", frameon=True, edgecolor="black")
+
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(figure)
+
+    # 2. Cure Quality Plot (Voxel Count)
+    undercured = np.asarray([record.undercured_voxels for record in history], dtype=np.int64)
+    overcured = np.asarray([record.overcured_voxels for record in history], dtype=np.int64)
+
+    figure, axis = plt.subplots(figsize=(6.0, 4.2))
+    axis.plot(
+    iterations,
+    undercured,
+    color=blue,
+    linestyle="-",
+    linewidth=1.8,
+    marker="o",
+    markevery=max(1, len(iterations) // 10),
+    markersize=4,
+    label="Undercured voxels",
+    )   
+    axis.plot(
+    iterations,
+    overcured,
+    color=red,
+    linestyle="--",
+    linewidth=1.8,
+    marker="s",
+    markevery=max(1, len(iterations) // 10),
+    markersize=4,
+    label="Overcured voxels",
+    )
+    
+    axis.set_xlabel("Iteration")
+    axis.set_ylabel("Voxel Count")
+    axis.tick_params(direction="in")
+    axis.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
+    axis.legend(loc="best", frameon=True, edgecolor="black")
+
+    figure.tight_layout()
+    cure_output_path = output_path.with_name(f"{output_path.stem}_cure{output_path.suffix}")
+    figure.savefig(cure_output_path, dpi=300, bbox_inches="tight")
+    plt.close(figure)
+
+
 
 def _write_history_csv(history, output_path):
     """Write only the metrics needed for the optimization-history analysis."""

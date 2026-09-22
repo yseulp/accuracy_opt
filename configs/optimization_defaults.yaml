@@ -2,18 +2,18 @@ problems: {}
 
 penalties:
   guven:
-    penalty_weight: 100.0
+    penalty_weight: 10000
 
   wang:
-    penalty_weight: 50.0
+    penalty_weight: 10.0
 
   reverse_guven:
-    penalty_weight: 100.0
+    penalty_weight: 100000
 
 solvers:
   projected_gradient_descent:
     step_size: 0.03
-    max_iterations: 100
+    max_iterations: 1200
     objective_tolerance: null
 
   slsqp:

@@ -242,11 +242,6 @@ def run_study(config_path: Path) -> tuple[list[SweepResult], dict[float, list[It
         output_directory / "resolved_study_config.yaml",
     )
     create_summary_plots(summaries, output_directory)
-    create_convergence_plot(
-        histories,
-        study_config["convergence_plot_weights"],
-        output_directory / "convergence_comparison.png",
-    )
     print(f"Penalty study saved in: {output_directory}")
     return summaries, histories
 
@@ -403,16 +398,80 @@ def _evaluate_iteration(
     )
     return record, gradient, evaluation_seconds
 
-
 def create_summary_plots(
     summaries: list[SweepResult],
     output_directory: Path,
 ) -> None:
-    """Create two compact penalty-study plots.
+    """Create publication-style penalty-study plots with enhanced log-scaling."""
 
-    1. Original objective and constraint violation on two y-axes.
-    2. Undercured and overcured voxel counts on one shared y-axis.
-    """
+    weights = np.asarray([r.penalty_weight for r in summaries], dtype=np.float64)
+    original_objectives = np.asarray([r.final_original_objective for r in summaries], dtype=np.float64)
+    constraint_violations = np.asarray([r.final_constraint_violation for r in summaries], dtype=np.float64)
+
+    undercured_voxels = np.asarray([r.undercured_voxels for r in summaries], dtype=np.int64)
+    overcured_voxels = np.asarray([r.overcured_voxels for r in summaries], dtype=np.int64)
+
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.size": 10,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "axes.linewidth": 0.8,
+        "lines.linewidth": 1.8,
+        "mathtext.fontset": "dejavuserif",
+    })
+
+    blue = "#1f77b4"
+    red = "#d62728"
+
+    fig, ax_obj = plt.subplots(figsize=(5.5, 4.0))
+    ax_pen = ax_obj.twinx()
+
+    # Logarithmische X-Achse für Penalty Weight
+    ax_obj.set_xscale("log")
+
+    l1 = ax_obj.plot(
+        weights, original_objectives,
+        color=blue, marker="o", markersize=4.5, label=r"Objective $J$"
+    )[0]
+
+    # Falls Verletzung stark variiert, Y-Achse ebenfalls logarithmisch skalieren
+    ax_pen.set_yscale("symlog", linthresh=1e-3, linscale=1.0,)
+    l2 = ax_pen.plot(
+        weights, constraint_violations,
+        color=red, marker="s", linestyle="--", markersize=4.5, label=r"Violation $P$"
+    )[0]
+
+    ax_obj.set_xlabel(r"Penalty parameter $\lambda$")
+    ax_obj.set_ylabel(r"Objective $J$", color=blue)
+    ax_pen.set_ylabel(r"Constraint violation $P$", color=red)
+
+    ax_obj.tick_params(axis="y", colors=blue, direction="in")
+    ax_pen.tick_params(axis="y", colors=red, direction="in")
+    ax_obj.tick_params(axis="x", which="both", direction="in")
+
+    ax_obj.spines["left"].set_color(blue)
+    ax_pen.spines["right"].set_color(red)
+
+    ax_obj.grid(True, which="major", linestyle=":", linewidth=0.6, alpha=0.6)
+
+    # Gemeinsame Legende
+    ax_obj.legend([l1, l2], [l1.get_label(), l2.get_label()], loc="center left", frameon=True, edgecolor="black")
+
+    fig.tight_layout()
+    fig.savefig(output_directory / "objective_constraint_vs_penalty.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    
+
+def create_summary_plots_1(
+    summaries: list[SweepResult],
+    output_directory: Path,
+) -> None:
+    """Create publication-style penalty-study plots."""
+
     weights = np.asarray(
         [result.penalty_weight for result in summaries],
         dtype=np.float64,
@@ -434,80 +493,276 @@ def create_summary_plots(
         dtype=np.int64,
     )
 
-    # Plot 1: mathematical trade-off, similar to the Rutsch penalty-study layout.
-    figure, objective_axis = plt.subplots(figsize=(8.0, 5.0))
+    # ------------------------------------------------------------------
+    # Publication-style defaults
+    # ------------------------------------------------------------------
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.size": 10,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "axes.linewidth": 0.8,
+        "lines.linewidth": 1.8,
+        "mathtext.fontset": "dejavuserif",
+    })
+
+    blue = "blue"
+    red = "red"
+
+    # ==================================================================
+    # Plot 1: objective and constraint violation
+    # ==================================================================
+
+    figure, objective_axis = plt.subplots(figsize=(5.3, 4.0))
     constraint_axis = objective_axis.twinx()
 
     objective_line = objective_axis.plot(
         weights,
         original_objectives,
+        color=blue,
         marker="o",
-        linewidth=2.0,
-        label="Original objective",
+        markersize=4.5,
+        linewidth=1.8,
+        linestyle="-",
+        label=r"Objective $J$",
     )[0]
+
     constraint_line = constraint_axis.plot(
         weights,
         constraint_violations,
+        color=red,
         marker="s",
+        markersize=4.5,
+        linewidth=1.8,
         linestyle="--",
-        linewidth=2.0,
-        label="Constraint violation",
+        label=r"Constraint violation $P$",
     )[0]
 
+    # Logarithmic penalty axis
     objective_axis.set_xscale("log")
-    objective_axis.set_xlabel("Penalty weight")
-    objective_axis.set_ylabel("Final original objective")
-    constraint_axis.set_ylabel("Final constraint violation P(I)")
-    objective_axis.set_title(
-        "Original objective and constraint violation vs. penalty weight"
+
+    objective_axis.set_xlabel(r"Penalty parameter $\lambda$")
+    objective_axis.set_ylabel(
+        r"Objective $J$",
+        color=blue,
     )
-    objective_axis.grid(True, which="both", alpha=0.25)
+    constraint_axis.set_ylabel(
+        r"Constraint violation $P$",
+        color=red,
+    )
+
+    # --------------------------------------------------------------
+    # Axis colors like the reference paper
+    # --------------------------------------------------------------
+
+    objective_axis.tick_params(
+        axis="y",
+        colors=blue,
+        direction="in",
+        width=0.8,
+    )
+
+    constraint_axis.tick_params(
+        axis="y",
+        colors=red,
+        direction="in",
+        width=0.8,
+    )
+
+    objective_axis.tick_params(
+        axis="x",
+        which="both",
+        direction="in",
+        width=0.8,
+    )
+
+    objective_axis.spines["left"].set_color(blue)
+    objective_axis.spines["right"].set_visible(False)
+
+    constraint_axis.spines["right"].set_color(red)
+    constraint_axis.spines["left"].set_visible(False)
+
+    # Top/bottom stay neutral
+    objective_axis.spines["top"].set_color("black")
+    objective_axis.spines["bottom"].set_color("black")
+    constraint_axis.spines["top"].set_color("black")
+
+    # --------------------------------------------------------------
+    # Paper-like grid
+    # --------------------------------------------------------------
+
+    objective_axis.grid(
+        True,
+        which="major",
+        linestyle=":",
+        linewidth=0.6,
+        alpha=0.55,
+    )
+
+    objective_axis.grid(
+        True,
+        which="minor",
+        linestyle=":",
+        linewidth=0.35,
+        alpha=0.30,
+    )
+
+    # --------------------------------------------------------------
+    # Combined legend
+    # --------------------------------------------------------------
 
     objective_axis.legend(
         [objective_line, constraint_line],
-        [objective_line.get_label(), constraint_line.get_label()],
+        [
+            objective_line.get_label(),
+            constraint_line.get_label(),
+        ],
         loc="best",
+        frameon=True,
+        fancybox=False,
+        edgecolor="black",
+        framealpha=1.0,
     )
 
+    # No title -- use caption in paper / presentation
     figure.tight_layout()
+
     figure.savefig(
         output_directory / "objective_constraint_vs_penalty.png",
         dpi=300,
+        bbox_inches="tight",
     )
+
+
+
     plt.close(figure)
 
-    # Plot 2: physical curing quality.
-    # Both quantities are voxel counts, so a shared y-axis is clearer than twin axes.
-    figure, axis = plt.subplots(figsize=(8.0, 5.0))
+    # ==================================================================
+    # Plot 2: cure quality
+    # ==================================================================
 
-    axis.plot(
+    figure, under_axis = plt.subplots(figsize=(5.3, 4.0))
+    over_axis = under_axis.twinx()
+
+    under_line = under_axis.plot(
         weights,
         undercured_voxels,
+        color=blue,
         marker="o",
-        linewidth=2.0,
+        markersize=4.5,
+        linewidth=1.8,
+        linestyle="-",
         label="Undercured voxels",
-    )
-    axis.plot(
+    )[0]
+
+    over_line = over_axis.plot(
         weights,
         overcured_voxels,
+        color=red,
         marker="s",
+        markersize=4.5,
+        linewidth=1.8,
         linestyle="--",
-        linewidth=2.0,
         label="Overcured voxels",
+    )[0]
+
+    under_axis.set_xscale("log")
+
+    under_axis.set_xlabel(r"Penalty parameter $\lambda$")
+
+    under_axis.set_ylabel(
+        "Number of undercured voxels",
+        color=blue,
     )
 
-    axis.set_xscale("log")
-    axis.set_xlabel("Penalty weight")
-    axis.set_ylabel("Voxel count")
-    axis.set_title("Cure quality vs. penalty weight")
-    axis.grid(True, which="both", alpha=0.25)
-    axis.legend(loc="best")
+    over_axis.set_ylabel(
+        "Number of overcured voxels",
+        color=red,
+    )
+
+    # --------------------------------------------------------------
+    # Colored axes
+    # --------------------------------------------------------------
+
+    under_axis.tick_params(
+        axis="y",
+        colors=blue,
+        direction="in",
+        width=0.8,
+    )
+
+    over_axis.tick_params(
+        axis="y",
+        colors=red,
+        direction="in",
+        width=0.8,
+    )
+
+    under_axis.tick_params(
+        axis="x",
+        which="both",
+        direction="in",
+        width=0.8,
+    )
+
+    under_axis.spines["left"].set_color(blue)
+    under_axis.spines["right"].set_visible(False)
+
+    over_axis.spines["right"].set_color(red)
+    over_axis.spines["left"].set_visible(False)
+
+    under_axis.spines["top"].set_color("black")
+    under_axis.spines["bottom"].set_color("black")
+    over_axis.spines["top"].set_color("black")
+
+    # --------------------------------------------------------------
+    # Grid
+    # --------------------------------------------------------------
+
+    under_axis.grid(
+        True,
+        which="major",
+        linestyle=":",
+        linewidth=0.6,
+        alpha=0.55,
+    )
+
+    under_axis.grid(
+        True,
+        which="minor",
+        linestyle=":",
+        linewidth=0.35,
+        alpha=0.30,
+    )
+
+    # --------------------------------------------------------------
+    # Legend
+    # --------------------------------------------------------------
+
+    under_axis.legend(
+        [under_line, over_line],
+        [
+            under_line.get_label(),
+            over_line.get_label(),
+        ],
+        loc="best",
+        frameon=True,
+        fancybox=False,
+        edgecolor="black",
+        framealpha=1.0,
+    )
 
     figure.tight_layout()
+
     figure.savefig(
         output_directory / "cure_quality_vs_penalty.png",
         dpi=300,
+        bbox_inches="tight",
     )
+
+
     plt.close(figure)
 
 def create_convergence_plot(

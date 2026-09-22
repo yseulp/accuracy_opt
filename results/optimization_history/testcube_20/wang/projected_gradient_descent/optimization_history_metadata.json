@@ -10,18 +10,18 @@
   "constraint_handling": "penalty",
   "problem_parameters": {},
   "penalty_parameters": {
-    "penalty_weight": 50.0
+    "penalty_weight": 10.0
   },
   "solver_parameters": {
     "step_size": 0.03,
-    "max_iterations": 100,
+    "max_iterations": 1200,
     "objective_tolerance": null
   },
   "history_available": true,
   "iteration_semantics": "one projected gradient update",
-  "reported_iterations": 100,
+  "reported_iterations": 1200,
   "success": true,
   "converged": null,
   "message": "maximum iterations completed",
-  "runtime_seconds": 19.116629494001245
+  "runtime_seconds": 97.64664265702595
 }

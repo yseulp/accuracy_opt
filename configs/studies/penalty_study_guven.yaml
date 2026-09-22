@@ -5,7 +5,7 @@ solver: projected_gradient_descent
 problem_parameters: {}
 
 solver_parameters:
-  step_size: 0.03
+  step_size: 0.003
   max_iterations: 100
   objective_tolerance: null
 
@@ -19,12 +19,6 @@ penalty_weights:
   - 1000000
   - 10000000
   - 100000000
-  
 
-convergence_plot_weights:
-  - 1
-  - 100
-  - 10000
-  - 1000000
 
 output_directory: results/penalty_study/guven_pgd
